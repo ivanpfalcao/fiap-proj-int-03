@@ -1,0 +1,69 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hive-metastore-job
+spec:
+  template:
+    metadata:
+      name: hive-metastore-job
+    spec:
+      containers:
+      - name: hive-metastore
+        image: ivanpfalcao/hive:3.1.3
+        ports:
+        - containerPort: 9083
+        env:
+        - name: SERVICE_NAME
+          value: "metastore"
+        - name: DB_DRIVER
+          value: "postgres"
+        - name: IS_RESUME
+          value: "true"
+        - name: HIVE_CUSTOM_CONF_DIR
+          value: "/opt/hive/custom-conf"
+           
+        - name: SERVICE_OPTS
+          valueFrom:
+            secretKeyRef:
+              name: hive-meta-conn-secret
+              key: SERVICE_OPTS
+        - name: DB_CONNECTION
+          valueFrom:
+            secretKeyRef:
+              name: hive-meta-conn-secret
+              key: DB_CONNECTION
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: hive-meta-conn-secret
+              key: DB_USER              
+        - name: DB_PSWD
+          valueFrom:
+            secretKeyRef:
+              name: hive-meta-conn-secret
+              key: DB_PSWD
+
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - mountPath: /opt/hive/custom-conf
+          name: hive-config-volume        
+        command:
+        - "/bin/bash"
+        - "-c"
+        - |
+            cp ${HIVE_CUSTOM_CONF_DIR}/hive-site.xml -f /opt/hive/conf/hive-site.xml \
+            && /opt/hive/bin/schematool -dbType postgres -initSchema -userName "${DB_USER}" -ifNotExist -passWord "${DB_PSWD}" -verbose
+        #securityContext:
+        #  runAsUser: 0
+      volumes:
+      - name: hive-config-volume
+        secret:
+          secretName: hive-site-xml
+      restartPolicy: Never
+  backoffLimit: 0

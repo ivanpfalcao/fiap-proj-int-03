@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: hive-metastore
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hive-metastore
+  serviceName: hive-metastore
+  template:
+    metadata:
+      labels:
+        app: hive-metastore
+    spec:
+      terminationGracePeriodSeconds: 5
+      containers:
+      - name: hive-metastore
+        image: ivanpfalcao/hive:3.1.3
+        ports:
+        - containerPort: 9083
+        - containerPort: 10000
+        env:
+        - name: SERVICE_NAME
+          value: "metastore"
+        - name: DB_DRIVER
+          value: "postgres"
+        - name: IS_RESUME
+          value: "true"
+        - name: HIVE_CUSTOM_CONF_DIR
+          value: "/opt/hive/custom-conf"          
+        - name: SERVICE_OPTS
+          valueFrom:
+            secretKeyRef:
+              name: hive-meta-conn-secret
+              key: SERVICE_OPTS
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - mountPath: /opt/hive/data/warehouse
+          name: warehouse-storage
+        - mountPath: /opt/hive/custom-conf
+          name: hive-config-volume                       
+        #command:
+        #- "/bin/bash"
+        #- "-c"
+        #- |
+        #  sleep infinity
+        #securityContext:
+        #    runAsUser: 0
+      volumes:
+      - name: hive-config-volume
+        secret:
+          secretName: hive-site-xml           
+  volumeClaimTemplates:
+  - metadata:
+      name: warehouse-storage
+    spec:
+      accessModes: [ReadWriteOnce]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hive-metastore-service
+spec:
+  selector:
+    app: hive-metastore
+  ports:
+    - name: port-9083
+      protocol: TCP
+      port: 9083
+      targetPort: 9083
+    - name: port-10000
+      protocol: TCP
+      port: 10000
+      targetPort: 10000
