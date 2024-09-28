@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meu-modelo-mlflow
+spec:
+  replicas: 1  # Número de réplicas do seu modelo
+  selector:
+    matchLabels:
+      app: meu-modelo-mlflow
+  template:
+    metadata:
+      labels:
+        app: meu-modelo-mlflow
+    spec:
+      containers:
+        - name: meu-modelo
+          image: test_mlflow:1.0.0  # A imagem criada com mlflow models build-docker
+          ports:
+            - containerPort: 8080  # Porta que seu servidor de inferência usa
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: meu-modelo-service
+spec:
+  selector:
+    app: meu-modelo-mlflow
+  ports:
+    - protocol: TCP
+      port: 80  # Porta externa do serviço
+      targetPort: 8080
+  type: LoadBalancer

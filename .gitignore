@@ -1,1 +1,3 @@
 app/get_movies/output_files/*
+*.pkl
+app/prepare_data/mlruns/*
