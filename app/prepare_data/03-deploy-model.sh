@@ -2,7 +2,7 @@
 BASEDIR="$( cd "$( dirname "${0}" )" && pwd )"
 
 
-NAMESPACE="mlflow-ns"
+NAMESPACE="datalake-ns"
 if [ "$1" != "" ]
 then
     NAMESPACE="${1}"
