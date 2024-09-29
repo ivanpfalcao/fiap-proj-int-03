@@ -1,4 +1,4 @@
-app/get_movies/output_files/*
+app/get_movies/output_folder/*
 *.pkl
 app/prepare_data/mlruns/*
 mlflow.db
