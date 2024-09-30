@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streamlit-app
+  labels:
+    app: streamlit-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streamlit-app
+  template:
+    metadata:
+      labels:
+        app: streamlit-app
+    spec:
+      terminationGracePeriodSeconds: 5
+      containers:
+          - name: streamlit-app
+            image: ivanpfalcao/fiap-dataprep-03:1.0.0
+            ports:
+            - containerPort: 8501  # Default Streamlit port
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "500m"
+              limits:
+                memory: "3000Mi"
+                cpu: "3"
+            env:
+            - name: MLFLOW_TRACKING_URI
+              value: "http://user:pswd@mlflow-server-tracking.datalake-ns.svc.cluster.local"   # Update with your MLflow tracking URI
+            - name: MLFLOW_MODEL_URI
+              value: "mlflow-artifacts:/0/719b3d97d64e470ca28eda86a0308e52/artifacts/model_mlp_2024-09-30_03-34-02"  # Update with your model's registered name
+            - name: STREAMLIT_SERVER_PORT
+              value: "8501"
+            - name: STREAMLIT_SERVER_HEADLESS
+              value: "true"  # Enable headless mode for Streamlit
+            
+            command: ["/bin/bash", "-c", "/app/frontend/01-streamlit.sh"]
+     
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: streamlit-app-service
+spec:
+  selector:
+    app: streamlit-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8501  # Forward to Streamlit's internal port
+  type: LoadBalancer

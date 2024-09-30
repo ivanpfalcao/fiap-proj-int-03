@@ -32,7 +32,7 @@ def load_model_once():
 		mlflow.set_tracking_uri(os.getenv('MLFLOW_TRACKING_URI', 'http://localhost:5000'))
 		
 		# Specify the model URI directly from the MLflow run
-		logged_model = 'runs:/bb8fe78c579e4390948a5f490703ac29/model_mlp_2024-09-30_02-03-32'
+		logged_model = os.getenv('MLFLOW_MODEL_URI', 'mlflow-artifacts:/0/719b3d97d64e470ca28eda86a0308e52/artifacts/model_mlp_2024-09-30_03-34-02')
 
 		# Load the MLflow model
 		model = mlflow.pyfunc.load_model(logged_model)
