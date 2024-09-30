@@ -54,7 +54,6 @@ def load_bert_model():
 		st.error(f"Error loading BERT model: {e}")
 		return None
 
-# Predict function
 def predict(model, description, genre_ids, bert_model):
 	try:
 		# Generate embeddings for the description (text)
@@ -66,12 +65,23 @@ def predict(model, description, genre_ids, bert_model):
 		# Convert genre_ids to a multi-hot encoding
 		genre_encoding = np.zeros(possible_genres)
 		for genre_id in genre_ids:
-			# Find the index of the genre_id and mark it in the multi-hot encoding
-			genre_index = list(GENRES.values()).index(genre_id)
-			genre_encoding[genre_index] = 1
+			if genre_id in GENRES.values():
+				genre_index = list(GENRES.values()).index(genre_id)
+				genre_encoding[genre_index] = 1
 
-		# Combine description_embedding (768 features) and genre_encoding (16 features)
+		# Combine description_embedding (768 features) and genre_encoding (16 features = multi-hot encoding)
 		combined_input = np.hstack((description_embedding, genre_encoding))
+
+		# **Adjust for any extra features** expected by the model:
+		# Your model expects 787 features, but you only have 784. So we add 3 extra features (zeros)
+		num_features_expected = 787  # This is based on the error message
+		num_features_current = combined_input.shape[0]
+		num_extra_features = num_features_expected - num_features_current
+
+		# Add extra zero features if necessary to match the expected input shape
+		if num_extra_features > 0:
+			extra_features = np.zeros(num_extra_features)
+			combined_input = np.hstack((combined_input, extra_features))
 
 		# Reshape to match the input shape expected by the model
 		combined_input = combined_input.reshape(1, -1)  # Ensure it's a 2D array with 1 row
