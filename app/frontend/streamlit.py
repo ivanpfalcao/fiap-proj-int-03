@@ -24,7 +24,7 @@ GENRES = {
 	"Western": 37
 }
 
-# Load the model artifact manually after getting the MLflow model URI
+# Load the MLflow model artifact once on startup
 @st.cache_resource
 def load_model_once():
 	try:
@@ -43,17 +43,20 @@ def load_model_once():
 		st.error(f"Error loading model from MLflow: {e}")
 		return None
 
-# Load BERT model for generating text embeddings
+# Load the BERT model once on startup for generating text embeddings
 @st.cache_resource
 def load_bert_model():
-	return SentenceTransformer('all-MPNet-base-v2')  # Using MPNet model
+	try:
+		bert_model = SentenceTransformer('all-MPNet-base-v2')  # Using MPNet model
+		st.success("BERT model loaded successfully.")
+		return bert_model
+	except Exception as e:
+		st.error(f"Error loading BERT model: {e}")
+		return None
 
 # Predict function
-def predict(model, description, genre_ids):
+def predict(model, description, genre_ids, bert_model):
 	try:
-		# Load the BERT model to generate embeddings for the description
-		bert_model = load_bert_model()
-
 		# Generate embeddings for the description (text)
 		description_embedding = bert_model.encode(description, convert_to_tensor=False)
 
@@ -83,10 +86,11 @@ def predict(model, description, genre_ids):
 # Streamlit UI
 def main():
 	st.title("Movie Rating Predictor")
-	st.write("This app predicts movie ratings based on the description using a model loaded from MLflow.")
+	st.write("This app predicts movie ratings based on the description using a model loaded from MLflow and BERT embeddings.")
 
-	# Load the model when the app starts (it will stay cached in memory)
+	# Load the models when the app starts (they will stay cached in memory)
 	model = load_model_once()
+	bert_model = load_bert_model()
 
 	# Input fields for the movie description
 	description = st.text_area("Enter the movie description:")
@@ -104,9 +108,9 @@ def main():
 	if st.button("Predict"):
 		if description and genre_ids:
 			try:
-				if model:
+				if model and bert_model:
 					# Make prediction
-					rating = predict(model, description, genre_ids)
+					rating = predict(model, description, genre_ids, bert_model)
 
 					if rating is not None:
 						# Show the predicted rating

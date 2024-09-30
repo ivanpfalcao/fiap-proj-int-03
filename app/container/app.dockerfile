@@ -9,8 +9,12 @@ RUN mkdir -p ${APP_FOLDER}/get_movies \
 COPY ./prepare_data/requirements.txt ${APP_FOLDER}/
 
 RUN pip install -r ${APP_FOLDER}/requirements.txt
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MPNet-base-v2')"
+
 
 COPY ./frontend/* ${APP_FOLDER}/frontend/
+
+
 COPY ./get_movies/* ${APP_FOLDER}/get_movies/
 COPY ./prepare_data/* ${APP_FOLDER}/prepare_data/
 
