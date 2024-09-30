@@ -38,7 +38,7 @@ class DataPrep():
                 SELECT 
                     DISTINCT
                     *
-                    , substring(release_date,1, 4) as release_year
+                    , substring(cast(release_date as string),1, 4) as release_year
                 FROM read_json('{self.bucket_raw_movie_folder}')
             );				 
             """)

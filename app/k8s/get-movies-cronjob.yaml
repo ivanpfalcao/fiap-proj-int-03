@@ -1,0 +1,58 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: get-movies-cronjob
+spec:
+  schedule: "0 0 * * *"  # Runs once a day at midnight
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: get-movies-container
+            image: ivanpfalcao/fiap-dataprep-03:1.0.0
+
+            command: ["/bin/bash", "-c", "/app/get_movies/get_movies.sh"]
+            env:
+            - name: TMDB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: tmdb-token-secret
+                  key: TMDB_TOKEN
+            - name: OUTPUT_MOVIES_FOLDER
+              value: "/app/output_folder"
+            - name: TMDB_NUMBER_OF_PAGES
+              value: "2"
+            - name: LOCAL_FOLDER
+              value: "/app/output_folder"
+            - name: S3_BUCKET
+              value: "datalakebucket"
+            - name: S3_RAW_MOVIE_FOLDER
+              value: "s3://datalakebucket/bronze/movies"
+            - name: S3_BUCKET_FOLDER
+              value: "bronze/movies"
+
+              
+            - name: S3_SILVER_MOVIE_FOLDER
+              value: "s3://datalakebucket/silver/movies"
+            - name: S3_GOLD_MODEL_MOVIE_FOLDER
+              value: "s3://datalakebucket/gold/model_movies/*/*.parquet"
+            - name: S3_ENDPOINT
+              value: "http://myminio-hl.datalake-ns.svc.cluster.local:9000"
+            - name: S3_ACCESS_KEY
+              value: "minio"
+            - name: S3_SECRET_KEY
+              value: "minio123"
+            - name: S3_USE_SSL
+              value: "false"
+            - name: MLFLOW_TRACK_SERVER
+              value: "http://user:pswd@10.110.53.150"
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "500m"
+              limits:
+                memory: "8Gi"
+                cpu: "6"
+          restartPolicy: OnFailure
+  startingDeadlineSeconds: 10

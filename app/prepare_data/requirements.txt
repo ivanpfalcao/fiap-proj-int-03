@@ -4,6 +4,8 @@ aniso8601==9.0.1
 asttokens
 astunparse==1.6.3
 blinker==1.8.2
+boto3==1.35.29
+botocore==1.35.29
 cachetools==5.5.0
 certifi==2024.8.30
 charset-normalizer==3.3.2
@@ -47,6 +49,7 @@ ipywidgets==8.1.5
 itsdangerous==2.2.0
 jedi
 Jinja2==3.1.4
+jmespath==1.0.1
 joblib==1.4.2
 jupyter_client
 jupyter_core
@@ -113,6 +116,7 @@ regex==2024.9.11
 requests==2.32.3
 rich==13.8.1
 rsa==4.9
+s3transfer==0.10.2
 safetensors==0.4.5
 scikit-learn==1.5.2
 scipy==1.13.1
