@@ -191,22 +191,49 @@ class MovieRatingPredictor:
 			"genre_ids": [[28, 12]]
 		})
 
-		# Save MultiLabelBinarizer to a file
+		# Save MultiLabelBinarizer to a file (artifacts)
 		mlb_path = "mlb.pkl"
 		with open(mlb_path, 'wb') as f:
 			pickle.dump(self.mlb, f)
 
+		# Use the 'artifacts' argument to pass any additional files needed
 		artifacts = {
-			'mlb': mlb_path,
+			'mlb': mlb_path,  # Store the MultiLabelBinarizer as an artifact
 		}
 
+		# Define a custom PythonModel class to properly load the artifacts
+		class MovieRatingPyFuncModel(mlflow.pyfunc.PythonModel):
+			def load_context(self, context):
+				# Load MultiLabelBinarizer
+				with open(context.artifacts['mlb'], 'rb') as f:
+					self.mlb = pickle.load(f)
+
+				# Load the trained model
+				self.model = self.model  # Pass in the model you trained before
+
+			def predict(self, context, model_input):
+				text, genre_ids = model_input
+				# Preprocess the input (generate BERT embeddings)
+				text_embedding = self.preprocess_text(text)
+				genre_ids_encoded = self.mlb.transform([genre_ids])
+				X = np.hstack((text_embedding.reshape(1, -1), genre_ids_encoded))
+
+				# Normalize features before prediction (use a saved scaler)
+				scaler = StandardScaler()
+				X_scaled = scaler.transform(X)
+
+				# Predict using the loaded model
+				return self.model.predict(X_scaled)[0]
+
+		# Log the model to MLflow
 		mlflow.pyfunc.log_model(
 			artifact_path="model",
-			python_model=predict_using_instance,
+			python_model=MovieRatingPyFuncModel(),
 			artifacts=artifacts,
 			registered_model_name=model_name,
 			input_example=input_example
 		)
+
 
 	def train(self):
 		mlflow.end_run()
