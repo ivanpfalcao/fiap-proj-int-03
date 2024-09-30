@@ -3,3 +3,5 @@ app/get_movies/output_folder/*
 app/prepare_data/mlruns/*
 mlflow.db
 env/mlflow-local/mlruns/*
+
+__pycache__

@@ -181,24 +181,19 @@ class MovieRatingPredictor:
 		return self.model.predict(X_scaled)[0]
 
 	def save_to_mlflow(self, model_name="movie_rating_predictor"):
-		def predict_using_instance(model_input):
-			text, genre_ids = model_input
-			return self.predict(text, genre_ids)
-
-		# Provide an input example using DataFrame
-		input_example = pd.DataFrame({
-			"overview": ["A thrilling action movie with breathtaking stunts."],
-			"genre_ids": [[28, 12]]
-		})
-
 		# Save MultiLabelBinarizer to a file (artifacts)
 		mlb_path = "mlb.pkl"
 		with open(mlb_path, 'wb') as f:
 			pickle.dump(self.mlb, f)
 
-		# Use the 'artifacts' argument to pass any additional files needed
+		# Save the trained model (e.g., sklearn model)
+		model_path = "model.pkl"
+		with open(model_path, 'wb') as f:
+			pickle.dump(self.model, f)
+
 		artifacts = {
-			'mlb': mlb_path,  # Store the MultiLabelBinarizer as an artifact
+			'mlb': mlb_path,   # Path to the MultiLabelBinarizer
+			'model': model_path,  # Path to the trained model
 		}
 
 		# Define a custom PythonModel class to properly load the artifacts
@@ -208,8 +203,9 @@ class MovieRatingPredictor:
 				with open(context.artifacts['mlb'], 'rb') as f:
 					self.mlb = pickle.load(f)
 
-				# Load the trained model
-				self.model = self.model  # Pass in the model you trained before
+				# Load the trained model (pickle)
+				with open(context.artifacts['model'], 'rb') as f:
+					self.model = pickle.load(f)
 
 			def predict(self, context, model_input):
 				text, genre_ids = model_input
@@ -218,20 +214,15 @@ class MovieRatingPredictor:
 				genre_ids_encoded = self.mlb.transform([genre_ids])
 				X = np.hstack((text_embedding.reshape(1, -1), genre_ids_encoded))
 
-				# Normalize features before prediction (use a saved scaler)
-				scaler = StandardScaler()
-				X_scaled = scaler.transform(X)
-
 				# Predict using the loaded model
-				return self.model.predict(X_scaled)[0]
+				return self.model.predict(X)[0]
 
 		# Log the model to MLflow
 		mlflow.pyfunc.log_model(
 			artifact_path="model",
 			python_model=MovieRatingPyFuncModel(),
 			artifacts=artifacts,
-			registered_model_name=model_name,
-			input_example=input_example
+			registered_model_name=model_name
 		)
 
 
