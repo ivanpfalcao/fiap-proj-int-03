@@ -31,7 +31,7 @@ spec:
             - name: MLFLOW_TRACKING_URI
               value: "http://user:pswd@mlflow-server-tracking.datalake-ns.svc.cluster.local"   # Update with your MLflow tracking URI
             - name: MLFLOW_MODEL_URI
-              value: "mlflow-artifacts:/0/719b3d97d64e470ca28eda86a0308e52/artifacts/model_mlp_2024-09-30_03-34-02"  # Update with your model's registered name
+              value: "mlflow-artifacts:/0/bcd55cf552d94929954c0a88be81dca8/artifacts/model_mlp_2024-09-30_20-36-36"  # Update with your model's registered name
             - name: STREAMLIT_SERVER_PORT
               value: "8501"
             - name: STREAMLIT_SERVER_HEADLESS
